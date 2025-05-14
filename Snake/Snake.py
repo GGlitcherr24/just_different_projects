@@ -3,9 +3,15 @@ import sys
 import random
 import config
 
+UP = 'up'
+DOWN = 'down'
+RIGHT = 'right'
+LEFT = 'left'
+direction = 'right'
 
 def close_game():
-    pass
+    pygame.quit()
+    exit()
 
 def draw_grid():
     for x in range(0, config.SCREENWIDTH, config.CELLSIZE):
@@ -45,11 +51,12 @@ def show_apple(apple_location):
     rect = pygame.Rect(x, y, config.CELLSIZE, config.CELLSIZE)
     pygame.draw.rect(screen, (255, 0, 0), rect)
 
-def show_score(score):
-    score_render = default_font.render(f'Score: {score}', True, (255, 255, 255))
+def show_score(score, temp_FPS):
+    score_render = default_font.render(f'Score: {score}, FPS: {temp_FPS}', True, (255, 255, 255))
     rect = score_render.get_rect()
-    rect.topleft = (config.SCREENWIDTH - 120, 10)
+    rect.topleft = (config.SCREENWIDTH - 220, 10)
     screen.blit(score_render, rect)
+
 
 def is_cell_free(idx, snake_coords):
     location_x = idx % config.MATRIX_W
@@ -69,21 +76,37 @@ def reset_board(snake_coords, apple_location, board):
             temp_board[i] = config.SNAKE_NUM
     return temp_board
 
-def RefreshBoard(snake_coords, apple_location, board):
-    temp_board = board[:]
-    apple_idx = apple_location['x'] + apple_location['y'] * config.MATRIX_W
-    queue = []
-    queue.append(apple_idx)
-    inqueue = [0] * config.MATRIX
-    found = False
-    while len(queue) != 0:
-        idx = queue.pop(0)
-        if inqueue[idx] == 1:
-            continue
-        inqueue[idx] = 1
-        for move_direction
+def update_shake_head(snake_coords):
+    if direction == UP:
+        new_head = {
+            'x': snake_coords[0]['x'],
+            'y': snake_coords[0]['y'] - 1
+        }
+    elif direction == DOWN:
+        new_head = {
+            'x': snake_coords[0]['x'],
+            'y': snake_coords[0]['y'] + 1
+        }
+    elif direction == RIGHT:
+        new_head = {
+            'x': snake_coords[0]['x'] + 1,
+            'y': snake_coords[0]['y']
+        }
+    else:
+        new_head = {
+            'x': snake_coords[0]['x'] - 1,
+            'y': snake_coords[0]['y']
+        }
+    return new_head
 
+def check_collapse(snake_coords):
+    if (snake_coords[0]['x'] < 0 or snake_coords[0]['x'] >= config.MATRIX_W
+            or snake_coords[0]['y'] < 0 or snake_coords[0]['y'] >= config.MATRIX_H
+            or snake_coords[0] in snake_coords[1:]):
+        close_game()
 def run_game():
+    global direction
+    temp_FPS = config.FPS
     board = [0] * config.MATRIX
     start_x = random.randint(5, config.MATRIX_W)
     start_y = random.randint(5, config.MATRIX_H)
@@ -98,15 +121,50 @@ def run_game():
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     close_game()
+                elif event.key == pygame.K_UP and direction != DOWN:
+                    direction = UP
+                elif event.key == pygame.K_DOWN and direction != UP:
+                    direction = DOWN
+                elif event.key == pygame.K_LEFT and direction != RIGHT:
+                    direction = LEFT
+                elif event.key == pygame.K_RIGHT and direction != LEFT:
+                    direction = RIGHT
+        if direction == UP:
+            new_head = {'x': snake_coords[0]['x'], 'y': snake_coords[0]['y'] - 1}
+        elif direction == DOWN:
+            new_head = {'x': snake_coords[0]['x'], 'y': snake_coords[0]['y'] + 1}
+        elif direction == LEFT:
+            new_head = {'x': snake_coords[0]['x'] - 1, 'y': snake_coords[0]['y']}
+        elif direction == RIGHT:
+            new_head = {'x': snake_coords[0]['x'] + 1, 'y': snake_coords[0]['y']}
+
+        if (new_head['x'] < 0):
+            new_head['x'] = config.MATRIX_W
+        elif new_head['x'] >= config.MATRIX_W:
+            new_head['x'] = 0
+        elif new_head['y'] < 0:
+            new_head['y'] = config.MATRIX_H
+        elif new_head['y'] >= config.MATRIX_H:
+            new_head['y'] = 0
+
+        if new_head in snake_coords[1:]:
+            close_game()
+
+        snake_coords.insert(0, new_head)
+        if snake_coords[0] == apple_location:
+            apple_location = get_apple_location(snake_coords)
+            if (len(snake_coords) - 3) % 6 == 0:
+                temp_FPS += 1
+        else:
+            snake_coords.pop()
         screen.fill(config.BG_COLOR)
         draw_grid()
         show_snake(snake_coords)
         show_apple(apple_location)
-        show_score(len(snake_coords) - 3)
-        update_board = reset_board(snake_coords, apple_location, board)
-        board = update_board
-        result, refresh_board = RefreshBoard(snake_coords, apple_location, board)
-        board = refresh_board
+        show_score(len(snake_coords) - 3, temp_FPS)
+        pygame.display.update()
+        clock.tick(temp_FPS)
+
 
 def show_end_interface():
     pass
