@@ -13,6 +13,18 @@ def close_game():
     pygame.quit()
     exit()
 
+def lose_game(score):
+    while 1:
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN or event.type == pygame.QUIT:
+                close_game()
+        font_for_game_over = pygame.font.Font('simkai.ttf', 52)
+        last_info_label = font_for_game_over.render(f'GAME OVER. Score: {score}', True, (255, 255, 255))
+        rect = last_info_label.get_rect()
+        rect.center = (config.SCREENWIDTH // 2, config.SCREENHEIGHT // 2)
+        screen.blit(last_info_label, rect)
+        pygame.display.update()
+
 def draw_grid():
     for x in range(0, config.SCREENWIDTH, config.CELLSIZE):
         pygame.draw.line(screen, (40, 40, 40), (x, 0), (x, config.SCREENHEIGHT))
@@ -148,12 +160,12 @@ def run_game():
             new_head['y'] = 0
 
         if new_head in snake_coords[1:]:
-            close_game()
+            lose_game(len(snake_coords) - 3)
 
         snake_coords.insert(0, new_head)
         if snake_coords[0] == apple_location:
             apple_location = get_apple_location(snake_coords)
-            if (len(snake_coords) - 3) % 6 == 0:
+            if (len(snake_coords) - 3) % 9 == 0:
                 temp_FPS += 1
         else:
             snake_coords.pop()
