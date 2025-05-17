@@ -69,25 +69,6 @@ def show_score(score, temp_FPS):
     rect.topleft = (config.SCREENWIDTH - 220, 10)
     screen.blit(score_render, rect)
 
-
-def is_cell_free(idx, snake_coords):
-    location_x = idx % config.MATRIX_W
-    location_y = idx // config.MATRIX_W
-    idx = {'x': location_x, 'y': location_y}
-    return {idx not in snake_coords}
-
-def reset_board(snake_coords, apple_location, board):
-    temp_board = board[:]
-    apple_idx = apple_location['x'] + apple_location['y'] * config.MATRIX_W
-    for i in range(config.MATRIX):
-        if i == apple_idx:
-            temp_board[i] = config.FOODNUM
-        elif is_cell_free(i, snake_coords):
-            temp_board[i] = config.SPACE_NUM
-        else:
-            temp_board[i] = config.SNAKE_NUM
-    return temp_board
-
 def update_shake_head(snake_coords):
     if direction == UP:
         new_head = {
@@ -176,10 +157,6 @@ def run_game():
         show_score(len(snake_coords) - 3, temp_FPS)
         pygame.display.update()
         clock.tick(temp_FPS)
-
-
-def show_end_interface():
-    pass
 
 def main():
     global screen, default_font, clock
